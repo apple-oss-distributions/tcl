@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and
 # redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: http.tcl,v 1.1.1.1 2000/12/06 23:03:36 wsanchez Exp $
+# RCS: @(#) $Id$
 
 # Rough version history:
 # 1.0	Old http_get interface
@@ -19,8 +19,12 @@
 # 2.3	Added SSL support, and ability to post from a channel
 #	This version also cleans up error cases and eliminates the
 #	"ioerror" status in favor of raising an error
+# 2.4	Added -binary option to http::geturl and charset element
+#	to the state array.
 
-package provide http 2.3
+package require Tcl 8.2
+# keep this in sync with pkgIndex.tcl
+package provide http 2.4
 
 namespace eval http {
     variable http
@@ -28,29 +32,32 @@ namespace eval http {
 	-accept */*
 	-proxyhost {}
 	-proxyport {}
-	-useragent {Tcl http client package 2.3}
 	-proxyfilter http::ProxyRequired
     }
+    set http(-useragent) "Tcl http client package [package provide http]"
 
-    variable formMap
-    variable alphanumeric a-zA-Z0-9
-    variable c
-    variable i 0
-    for {} {$i <= 256} {incr i} {
-	set c [format %c $i]
-	if {![string match \[$alphanumeric\] $c]} {
-	    set formMap($c) %[format %.2x $i]
+    proc init {} {
+	variable formMap
+	variable alphanumeric a-zA-Z0-9
+	for {set i 0} {$i <= 256} {incr i} {
+	    set c [format %c $i]
+	    if {![string match \[$alphanumeric\] $c]} {
+		set formMap($c) %[format %.2x $i]
+	    }
 	}
+	# These are handled specially
+	array set formMap { " " + \n %0d%0a }
     }
-    # These are handled specially
-    array set formMap {
-	" " +   \n %0d%0a
-    }
+    init
 
     variable urlTypes
     array set urlTypes {
 	http	{80 ::socket}
     }
+
+    variable encodings [string tolower [encoding names]]
+    # This can be changed, but iso8859-1 is the RFC standard.
+    variable defaultCharset "iso8859-1"
 
     namespace export geturl config reset wait formatQuery register unregister
     # Useful, but not exported: data size status code
@@ -211,6 +218,7 @@ proc http::reset { token {why reset} } {
 proc http::geturl { url args } {
     variable http
     variable urlTypes
+    variable defaultCharset
 
     # Initialize the state variable, an array.  We'll return the
     # name of this array as the token for the transaction.
@@ -226,6 +234,7 @@ proc http::geturl { url args } {
     # Process command options.
 
     array set state {
+	-binary		false
 	-blocksize 	8192
 	-queryblocksize 8192
 	-validate 	0
@@ -235,6 +244,7 @@ proc http::geturl { url args } {
 	-queryprogress	{}
 	state		header
 	meta		{}
+	coding		{}
 	currentsize	0
 	totalsize	0
 	querylength	0
@@ -244,7 +254,8 @@ proc http::geturl { url args } {
 	status		""
 	http            ""
     }
-    set options {-blocksize -channel -command -handler -headers \
+    set state(charset)	$defaultCharset
+    set options {-binary -blocksize -channel -command -handler -headers \
 	    -progress -query -queryblocksize -querychannel -queryprogress\
 	    -validate -timeout -type}
     set usage [join $options ", "]
@@ -393,7 +404,7 @@ proc http::geturl { url args } {
     if {[catch {
 	puts $s "$how $srvurl HTTP/1.0"
 	puts $s "Accept: $http(-accept)"
-	puts $s "Host: $host"
+	puts $s "Host: $host:$port"
 	puts $s "User-Agent: $http(-useragent)"
 	foreach {key value} $state(-headers) {
 	    regsub -all \[\n\r\]  $value {} value
@@ -645,7 +656,7 @@ proc http::Write {token} {
 # Side Effects
 #	Read the socket and handle callbacks.
 
- proc http::Event {token} {
+proc http::Event {token} {
     variable $token
     upvar 0 $token state
     set s $state(sock)
@@ -658,15 +669,27 @@ proc http::Write {token} {
 	if {[catch {gets $s line} n]} {
 	    Finish $token $n
 	} elseif {$n == 0} {
+	    variable encodings
 	    set state(state) body
-	    if {![regexp -nocase ^text $state(type)]} {
+	    if {$state(-binary) || ![regexp -nocase ^text $state(type)] || \
+		    [regexp gzip|compress $state(coding)]} {
 		# Turn off conversions for non-text data
 		fconfigure $s -translation binary
 		if {[info exists state(-channel)]} {
 		    fconfigure $state(-channel) -translation binary
 		}
+	    } else {
+		# If we are getting text, set the incoming channel's
+		# encoding correctly.  iso8859-1 is the RFC default, but
+		# this could be any IANA charset.  However, we only know
+		# how to convert what we have encodings for.
+		set idx [lsearch -exact $encodings \
+			[string tolower $state(charset)]]
+		if {$idx >= 0} {
+		    fconfigure $s -encoding [lindex $encodings $idx]
+		}
 	    }
-	    if {[info exists state(-channel)] &&
+	    if {[info exists state(-channel)] && \
 		    ![info exists state(-handler)]} {
 		# Initiate a sequence of background fcopies
 		fileevent $s readable {}
@@ -675,9 +698,14 @@ proc http::Write {token} {
 	} elseif {$n > 0} {
 	    if {[regexp -nocase {^content-type:(.+)$} $line x type]} {
 		set state(type) [string trim $type]
+		# grab the optional charset information
+		regexp -nocase {charset\s*=\s*(\S+)} $type x state(charset)
 	    }
 	    if {[regexp -nocase {^content-length:(.+)$} $line x length]} {
 		set state(totalsize) [string trim $length]
+	    }
+	    if {[regexp -nocase {^content-encoding:(.+)$} $line x coding]} {
+		set state(coding) [string trim $coding]
 	    }
 	    if {[regexp -nocase {^([^:]+):(.+)$} $line x key value]} {
 		lappend state(meta) $key [string trim $value]
@@ -703,7 +731,8 @@ proc http::Write {token} {
 	    Finish $token $err
 	} else {
 	    if {[info exists state(-progress)]} {
-		eval $state(-progress) {$token $state(totalsize) $state(currentsize)}
+		eval $state(-progress) \
+			{$token $state(totalsize) $state(currentsize)}
 	    }
 	}
     }
@@ -720,7 +749,7 @@ proc http::Write {token} {
 # Side Effects
 #	This closes the connection upon error
 
- proc http::CopyStart {s token} {
+proc http::CopyStart {s token} {
     variable $token
     upvar 0 $token state
     if {[catch {
@@ -742,7 +771,7 @@ proc http::Write {token} {
 # Side Effects
 #	Invokes callbacks
 
- proc http::CopyDone {token count {error {}}} {
+proc http::CopyDone {token count {error {}}} {
     variable $token
     upvar 0 $token state
     set s $state(sock)
@@ -770,7 +799,7 @@ proc http::Write {token} {
 # Side Effects
 #	Clean up the socket
 
- proc http::Eof {token} {
+proc http::Eof {token} {
     variable $token
     upvar 0 $token state
     if {[string equal $state(state) "header"]} {
@@ -823,10 +852,10 @@ proc http::formatQuery {args} {
     set sep ""
     foreach i $args {
 	append result $sep [mapReply $i]
-	if {[string compare $sep "="]} {
-	    set sep =
-	} else {
+	if {[string equal $sep "="]} {
 	    set sep &
+	} else {
+	    set sep =
 	}
     }
     return $result
@@ -842,8 +871,9 @@ proc http::formatQuery {args} {
 # Results:
 #       The encoded string
 
- proc http::mapReply {string} {
+proc http::mapReply {string} {
     variable formMap
+    variable alphanumeric
 
     # The spec says: "non-alphanumeric characters are replaced by '%HH'"
     # 1 leave alphanumerics characters alone
@@ -851,12 +881,9 @@ proc http::formatQuery {args} {
     # 3 Escape constructs that are "special" to the tcl parser
     # 4 "subst" the result, doing all the array substitutions
 
-    set alphanumeric	a-zA-Z0-9
     regsub -all \[^$alphanumeric\] $string {$formMap(&)} string
-    regsub -all \n $string {\\n} string
-    regsub -all \t $string {\\t} string
     regsub -all {[][{})\\]\)} $string {\\&} string
-    return [subst $string]
+    return [subst -nocommand $string]
 }
 
 # http::ProxyRequired --
@@ -868,14 +895,13 @@ proc http::formatQuery {args} {
 # Results:
 #       The current proxy settings
 
- proc http::ProxyRequired {host} {
+proc http::ProxyRequired {host} {
     variable http
     if {[info exists http(-proxyhost)] && [string length $http(-proxyhost)]} {
-	if {![info exists http(-proxyport)] || ![string length $http(-proxyport)]} {
+	if {![info exists http(-proxyport)] || \
+		![string length $http(-proxyport)]} {
 	    set http(-proxyport) 8080
 	}
 	return [list $http(-proxyhost) $http(-proxyport)]
-    } else {
-	return {}
     }
 }
