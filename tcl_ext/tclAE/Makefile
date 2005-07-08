@@ -7,7 +7,7 @@
 # Project info
 Project               = TclAE
 
-Extra_Environment     = GCC_VERSION=4.0 PRECOMPILE_PREFIX_HEADER=NO \
+Extra_Environment     = GCC_VERSION=3.x PRECOMPILE_PREFIX_HEADER=NO \
                         FRAMEWORK_SEARCH_PATHS="$(shell dirname $(TclFramework))" \
                         LIBRARY_SEARCH_PATHS="$(TclFramework)" $(TEA_Environment) \
                         INSTALL_ROOT="$(SYMROOT)/Deployment.build/"

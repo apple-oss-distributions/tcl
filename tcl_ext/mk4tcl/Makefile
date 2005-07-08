@@ -18,10 +18,6 @@ GnuAfterInstall       = install-doc fix-owner
 # include TEA Tcl extension build support
 include ../TEA.make
 
-# Force gcc-4.0 (or configure will fail)
-CC                    = gcc-4.0
-CXX                   = g++-4.0
-
 Install_Target        = install-tcl
 
 install-doc:

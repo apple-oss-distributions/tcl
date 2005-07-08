@@ -410,7 +410,7 @@ diff -u -p -r1.3.2.1 tkMacOSXInt.h
  
 ===================================================================
 --- macosx/Wish.pbproj/project.pbxproj.orig	2004-07-19 23:05:59.000000000 -0700
-+++ macosx/Wish.pbproj/project.pbxproj	2005-10-24 14:55:55.000000000 -0700
++++ macosx/Wish.pbproj/project.pbxproj	2005-07-07 18:03:26.000000000 -0700
 @@ -134,7 +134,7 @@
  			);
  			runOnlyForDeploymentPostprocessing = 0;
@@ -420,23 +420,7 @@ diff -u -p -r1.3.2.1 tkMacOSXInt.h
  		};
  		F537552A016C352C01DC9062 = {
  			buildStyles = (
-@@ -174,7 +174,6 @@
- 			);
- 			buildSettings = {
- 				OTHER_LDFLAGS = "\U0001-prebind";
--				TEMP_DIR = "${OBJROOT}/Development.build/$(PROJECT_NAME).build/$(TARGET_NAME).build";
- 				UNSTRIPPED_PRODUCT = YES;
- 			};
- 			isa = PBXBuildStyle;
-@@ -187,7 +186,6 @@
- 				DEBUGGING_SYMBOLS = NO;
- 				OPTIMIZATION_CFLAGS = "-Os";
- 				OTHER_LDFLAGS = "\U0001-prebind";
--				TEMP_DIR = "${OBJROOT}/Deployment.build/$(PROJECT_NAME).build/$(TARGET_NAME).build";
- 			};
- 			isa = PBXBuildStyle;
- 			name = Deployment;
-@@ -432,7 +430,6 @@
+@@ -432,7 +432,6 @@
  		};
  		F5375546016C376E01DC9062 = {
  			children = (
@@ -444,7 +428,7 @@ diff -u -p -r1.3.2.1 tkMacOSXInt.h
  				F5375549016C376E01DC9062,
  				F537554A016C376E01DC9062,
  				F537554B016C376E01DC9062,
-@@ -470,8 +467,9 @@
+@@ -470,8 +469,9 @@
  		F5375548016C376E01DC9062 = {
  			fileEncoding = 5;
  			isa = PBXFileReference;
@@ -456,7 +440,7 @@ diff -u -p -r1.3.2.1 tkMacOSXInt.h
  		};
  		F5375549016C376E01DC9062 = {
  			fileEncoding = 5;
-@@ -1321,6 +1319,7 @@
+@@ -1321,6 +1321,7 @@
  		};
  		F53755C9016C389901DC9062 = {
  			children = (
@@ -464,21 +448,21 @@ diff -u -p -r1.3.2.1 tkMacOSXInt.h
  				F53755CA016C389901DC9062,
  				F53755CB016C389901DC9062,
  			);
-@@ -1566,11 +1565,11 @@
+@@ -1566,11 +1567,11 @@
  	<key>CFBundlePackageType</key>
  	<string>FMWK</string>
  	<key>CFBundleShortVersionString</key>
 -	<string>8.4.7</string>
-+	<string>8.4.7 a</string>
++	<string>8.4.7 1</string>
  	<key>CFBundleSignature</key>
  	<string>WiSH</string>
  	<key>CFBundleVersion</key>
 -	<string>8.4.7</string>
-+	<string>8.4.7 a</string>
++	<string>8.4.7 1</string>
  </dict>
  </plist>
  ";
-@@ -2897,7 +2896,7 @@
+@@ -2897,7 +2898,7 @@
  				LIBRARY_SEARCH_PATHS = "";
  				OPTIMIZATION_CFLAGS = "-O0";
  				OTHER_CFLAGS = "-DMAC_OSX_TK -DTCL_WIDE_INT_TYPE=\"long long\"";
@@ -487,7 +471,7 @@ diff -u -p -r1.3.2.1 tkMacOSXInt.h
  				OTHER_REZFLAGS = "-i \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" -i \"../generic\"";
  				PRODUCT_NAME = "Wish Shell";
  				SECTORDER_FLAGS = "";
-@@ -2941,7 +2940,7 @@
+@@ -2941,7 +2942,7 @@
  	<key>CFBundleExecutable</key>
  	<string>Wish Shell</string>
  	<key>CFBundleGetInfoString</key>
@@ -496,21 +480,21 @@ diff -u -p -r1.3.2.1 tkMacOSXInt.h
  MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright © 2001-2002, Apple Computer, Inc.</string>
  	<key>CFBundleIconFile</key>
  	<string>Wish.icns</string>
-@@ -2954,11 +2953,11 @@
+@@ -2954,11 +2955,11 @@
  	<key>CFBundlePackageType</key>
  	<string>APPL</string>
  	<key>CFBundleShortVersionString</key>
 -	<string>8.4.7</string>
-+	<string>8.4.7 a</string>
++	<string>8.4.7 1</string>
  	<key>CFBundleSignature</key>
  	<string>WiSH</string>
  	<key>CFBundleVersion</key>
 -	<string>8.4.7</string>
-+	<string>8.4.7 a</string>
++	<string>8.4.7 1</string>
  </dict>
  </plist>
  ";
-@@ -2967,8 +2966,6 @@
+@@ -2967,8 +2968,6 @@
  			buildActionMask = 2147483647;
  			files = (
  				F53756AC016C4E1D01DC9062,
@@ -519,7 +503,7 @@ diff -u -p -r1.3.2.1 tkMacOSXInt.h
  			);
  			isa = PBXHeadersBuildPhase;
  			runOnlyForDeploymentPostprocessing = 0;
-@@ -3039,18 +3036,6 @@
+@@ -3039,18 +3038,6 @@
  			settings = {
  			};
  		};
@@ -788,17 +772,3 @@ diff -N macosx/tkMacOSXAppInit.c
 -    error:
 -    return TCL_ERROR;
 -}
---- macosx/tkMacOSXDraw.c.orig	2005-11-09 14:44:33.000000000 -0800
-+++ macosx/tkMacOSXDraw.c	2005-11-09 14:48:55.000000000 -0800
-@@ -464,7 +464,11 @@
-         pixmap.pixelSize = 32;
-         pixmap.cmpCount = 3;
-         pixmap.cmpSize = 8;
-+#ifdef __BIG_ENDIAN__
-         pixmap.pixelFormat = k32ARGBPixelFormat;
-+#else /* !__BIG_ENDIAN__ */
-+        pixmap.pixelFormat = k32BGRAPixelFormat;
-+#endif /* !__BIG_ENDIAN__ */
-         pixmap.pmTable = NULL;
-         pixmap.pmExt = 0;
-         pixmap.baseAddr = image->data;

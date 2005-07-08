@@ -5,8 +5,8 @@
  PROJECT			:= tcl
  PRODUCT_NAME		:= Tcl
 +_nothing		:=
-+# need a leading space before the 'a'
-+ALT_VERSION		:= ${_nothing} a
++# need a leading space before the '1'
++ALT_VERSION		:= ${_nothing} 1
  
  UNIX_DIR		:= ${CURDIR}/../unix
  GENERIC_DIR		:= ${CURDIR}/../generic
