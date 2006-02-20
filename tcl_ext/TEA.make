@@ -90,8 +90,8 @@ ifeq ($(TEA_UseXcode),YES)
 
 Sources               = $(SRCROOT)/$(Project)
 XCODEBUILD            = /usr/bin/xcodebuild
-XcodeBuild            = cd $(Sources) && $(XCODEBUILD) -buildstyle Deployment \
-                        $(MAKEOVERRIDES) OPTIMIZATION_CFLAGS="$(CFLAGS)" CC=gcc \
+XcodeBuild            = cd $(Sources) && $(XCODEBUILD) -configuration Deployment \
+                        $(MAKEOVERRIDES) CC=gcc \
                         SRCROOT="$(Sources)" OBJROOT="$(OBJROOT)" SYMROOT="$(SYMROOT)" \
                         $(Environment) $(Extra_Xcode_Flags)
 

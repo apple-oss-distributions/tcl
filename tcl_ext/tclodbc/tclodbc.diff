@@ -532,3 +532,51 @@ diff -u -p -r1.4 tclodbc.hxx
  #else
  #include <sql.h>
  #include <odbcinst.h>
+diff -u -rupN tclodbc.cxx tclodbc.cxx
+--- tclodbc.cxx	2004-03-19 12:32:21.000000000 -0800
++++ tclodbc.cxx	2005-06-20 13:22:16.000000000 -0700
+@@ -121,13 +121,15 @@ TclObj SqlErr (HENV env, HDBC dbc, HSTMT
+     char SqlMessage[SQL_MAX_MESSAGE_LENGTH];
+     char SqlState[6];
+     SDWORD NativeError;
++    SQLINTEGER tmp;
+     SWORD Available;
+     RETCODE rc;
+     TclObj errObj;
+ 
+     rc = SQLError(env, dbc, stmt, 
+-            (UCHAR*) SqlState, &NativeError, (UCHAR*) SqlMessage, 
++            (UCHAR*) SqlState, &tmp, (UCHAR*) SqlMessage, 
+             SQL_MAX_MESSAGE_LENGTH-1, &Available);
++    NativeError = tmp;
+ 
+     // sql error object is a triple:
+     // {standard error code} {native error code} {error message}
+--- statemnt.cxx	2004-03-20 14:14:19.000000000 -0800
++++ statemnt.cxx	2005-06-20 13:56:06.000000000 -0700
+@@ -358,9 +358,9 @@ TclObj TclStatement::Result() {
+ 		result.appendElement(row);
+ 	    }
+ 	} else {
+-	    long i;
+-	    SQLRowCount(stmt, (SQLINTEGER *) &i);
+-	    result = i;
++	    SQLLEN i;
++	    SQLRowCount(stmt, &i);
++	    result = (long)i;
+ 	}
+ 	return result;
+     } else {
+@@ -398,9 +398,9 @@ TclObj TclStatement::Result() {
+ 
+ 
+ 	    } else {
+-		long i;
+-		SQLRowCount(stmt, (SQLINTEGER *) &i);
+-		return i;
++		SQLLEN i;
++		SQLRowCount(stmt, &i);
++		return (long)i;
+ 	    }
+ 
+ 	} while(more);

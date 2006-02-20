@@ -4613,3 +4613,26 @@ diff -u -p -r1.5 configure
  s%@TCLSH_PROG@%$TCLSH_PROG%g
  s%@WISH_PROG@%$WISH_PROG%g
  
+--- libtiff/tiffconf.h.orig	2005-11-10 01:02:10.000000000 -0800
++++ libtiff/tiffconf.h	2005-11-10 01:53:43.000000000 -0800
+@@ -61,8 +61,19 @@
+ #define	HOST_FILLORDER	FILLORDER_MSB2LSB
+ #endif
+ #ifndef	HOST_BIGENDIAN
++#ifdef __BIG_ENDIAN__
+ #define	HOST_BIGENDIAN	1
+-#endif
++#else /* !__BIG_ENDIAN__ */
++#define	HOST_BIGENDIAN	1
++#endif /* __BIG_ENDIAN__ */
++#endif /* HOST_BIGENDIAN */
++
++#undef	WORDS_BIGENDIAN
++#ifdef __BIG_ENDIAN__
++#define	WORDS_BIGENDIAN
++#else /* !__BIG_ENDIAN__ */
++/* #undef HOST_BIGENDIAN */
++#endif /* __BIG_ENDIAN__ */
+ 
+ #ifndef USE_64BIT_API
+ #  define USE_64BIT_API	0

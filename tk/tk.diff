@@ -408,13 +408,9 @@ diff -u -p -r1.3.2.1 tkMacOSXInt.h
  
  #include "tkIntPlatDecls.h"
  
-Index: macosx/Wish.pbproj/project.pbxproj
 ===================================================================
-RCS file: /cvsroot/tktoolkit/tk/macosx/Wish.pbproj/project.pbxproj,v
-retrieving revision 1.18.2.16
-diff -u -p -r1.18.2.16 project.pbxproj
---- macosx/Wish.pbproj/project.pbxproj	20 Jul 2004 06:05:59 -0000	1.18.2.16
-+++ macosx/Wish.pbproj/project.pbxproj	27 Sep 2004 08:36:46 -0000
+--- macosx/Wish.pbproj/project.pbxproj.orig	2004-07-19 23:05:59.000000000 -0700
++++ macosx/Wish.pbproj/project.pbxproj	2005-10-24 14:55:55.000000000 -0700
 @@ -134,7 +134,7 @@
  			);
  			runOnlyForDeploymentPostprocessing = 0;
@@ -424,7 +420,23 @@ diff -u -p -r1.18.2.16 project.pbxproj
  		};
  		F537552A016C352C01DC9062 = {
  			buildStyles = (
-@@ -432,7 +432,6 @@
+@@ -174,7 +174,6 @@
+ 			);
+ 			buildSettings = {
+ 				OTHER_LDFLAGS = "\U0001-prebind";
+-				TEMP_DIR = "${OBJROOT}/Development.build/$(PROJECT_NAME).build/$(TARGET_NAME).build";
+ 				UNSTRIPPED_PRODUCT = YES;
+ 			};
+ 			isa = PBXBuildStyle;
+@@ -187,7 +186,6 @@
+ 				DEBUGGING_SYMBOLS = NO;
+ 				OPTIMIZATION_CFLAGS = "-Os";
+ 				OTHER_LDFLAGS = "\U0001-prebind";
+-				TEMP_DIR = "${OBJROOT}/Deployment.build/$(PROJECT_NAME).build/$(TARGET_NAME).build";
+ 			};
+ 			isa = PBXBuildStyle;
+ 			name = Deployment;
+@@ -432,7 +430,6 @@
  		};
  		F5375546016C376E01DC9062 = {
  			children = (
@@ -432,7 +444,7 @@ diff -u -p -r1.18.2.16 project.pbxproj
  				F5375549016C376E01DC9062,
  				F537554A016C376E01DC9062,
  				F537554B016C376E01DC9062,
-@@ -470,8 +469,9 @@
+@@ -470,8 +467,9 @@
  		F5375548016C376E01DC9062 = {
  			fileEncoding = 5;
  			isa = PBXFileReference;
@@ -444,7 +456,7 @@ diff -u -p -r1.18.2.16 project.pbxproj
  		};
  		F5375549016C376E01DC9062 = {
  			fileEncoding = 5;
-@@ -1321,6 +1321,7 @@
+@@ -1321,6 +1319,7 @@
  		};
  		F53755C9016C389901DC9062 = {
  			children = (
@@ -452,7 +464,30 @@ diff -u -p -r1.18.2.16 project.pbxproj
  				F53755CA016C389901DC9062,
  				F53755CB016C389901DC9062,
  			);
-@@ -2941,7 +2942,7 @@ MacOS X Port by Jim Ingham &lt;jingham@a
+@@ -1566,11 +1565,11 @@
+ 	<key>CFBundlePackageType</key>
+ 	<string>FMWK</string>
+ 	<key>CFBundleShortVersionString</key>
+-	<string>8.4.7</string>
++	<string>8.4.7 a</string>
+ 	<key>CFBundleSignature</key>
+ 	<string>WiSH</string>
+ 	<key>CFBundleVersion</key>
+-	<string>8.4.7</string>
++	<string>8.4.7 a</string>
+ </dict>
+ </plist>
+ ";
+@@ -2897,7 +2896,7 @@
+ 				LIBRARY_SEARCH_PATHS = "";
+ 				OPTIMIZATION_CFLAGS = "-O0";
+ 				OTHER_CFLAGS = "-DMAC_OSX_TK -DTCL_WIDE_INT_TYPE=\"long long\"";
+-				OTHER_LDFLAGS = "-sectcreate __TEXT __info_plist \"$TEMP_DIR/Info.plist\" -headerpad_max_install_names";
++				OTHER_LDFLAGS = "-sectcreate __TEXT __info_plist \"${OBJROOT}/$(PROJECT_NAME).build/$(TARGET_NAME).build/Info.plist\" -headerpad_max_install_names";
+ 				OTHER_REZFLAGS = "-i \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" -i \"../generic\"";
+ 				PRODUCT_NAME = "Wish Shell";
+ 				SECTORDER_FLAGS = "";
+@@ -2941,7 +2940,7 @@
  	<key>CFBundleExecutable</key>
  	<string>Wish Shell</string>
  	<key>CFBundleGetInfoString</key>
@@ -461,7 +496,21 @@ diff -u -p -r1.18.2.16 project.pbxproj
  MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright © 2001-2002, Apple Computer, Inc.</string>
  	<key>CFBundleIconFile</key>
  	<string>Wish.icns</string>
-@@ -2967,8 +2968,6 @@ MacOS X Port by Jim Ingham &lt;jingham@a
+@@ -2954,11 +2953,11 @@
+ 	<key>CFBundlePackageType</key>
+ 	<string>APPL</string>
+ 	<key>CFBundleShortVersionString</key>
+-	<string>8.4.7</string>
++	<string>8.4.7 a</string>
+ 	<key>CFBundleSignature</key>
+ 	<string>WiSH</string>
+ 	<key>CFBundleVersion</key>
+-	<string>8.4.7</string>
++	<string>8.4.7 a</string>
+ </dict>
+ </plist>
+ ";
+@@ -2967,8 +2966,6 @@
  			buildActionMask = 2147483647;
  			files = (
  				F53756AC016C4E1D01DC9062,
@@ -470,7 +519,7 @@ diff -u -p -r1.18.2.16 project.pbxproj
  			);
  			isa = PBXHeadersBuildPhase;
  			runOnlyForDeploymentPostprocessing = 0;
-@@ -3039,18 +3038,6 @@ MacOS X Port by Jim Ingham &lt;jingham@a
+@@ -3039,18 +3036,6 @@
  			settings = {
  			};
  		};
@@ -509,7 +558,7 @@ diff -N macosx/tkMacOSXAppInit.c
 - * See the file "license.terms" for information on usage and redistribution
 - * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 - *
-- * RCS: @(#) $Id: tk.diff,v 1.3 2005/01/08 02:00:54 jkh Exp $
+- * RCS: @(#) $Id: tk.diff,v 1.2.10.1 2005/01/08 01:03:30 jkh Exp $
 - */
 -#include <pthread.h>
 -#include <sys/stat.h>
@@ -739,3 +788,17 @@ diff -N macosx/tkMacOSXAppInit.c
 -    error:
 -    return TCL_ERROR;
 -}
+--- macosx/tkMacOSXDraw.c.orig	2005-11-09 14:44:33.000000000 -0800
++++ macosx/tkMacOSXDraw.c	2005-11-09 14:48:55.000000000 -0800
+@@ -464,7 +464,11 @@
+         pixmap.pixelSize = 32;
+         pixmap.cmpCount = 3;
+         pixmap.cmpSize = 8;
++#ifdef __BIG_ENDIAN__
+         pixmap.pixelFormat = k32ARGBPixelFormat;
++#else /* !__BIG_ENDIAN__ */
++        pixmap.pixelFormat = k32BGRAPixelFormat;
++#endif /* !__BIG_ENDIAN__ */
+         pixmap.pmTable = NULL;
+         pixmap.pmExt = 0;
+         pixmap.baseAddr = image->data;
