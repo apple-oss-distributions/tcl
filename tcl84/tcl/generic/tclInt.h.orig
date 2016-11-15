@@ -910,51 +910,7 @@ typedef struct CmdFrame {
 #define TCL_LOCATION_PROC      (5) /* Location in a dynamic proc */
 
 #define TCL_LOCATION_LAST      (6) /* Number of values in the enum */
-
-typedef struct CFWord {
-  CmdFrame* framePtr;  /* CmdFrame to acess */
-  int       word;      /* Index of the word in the command */
-  int       refCount;  /* #times the word is on the stack */
-} CFWord;
-
-typedef struct CFWordBC {
-    CmdFrame* framePtr;  /* CmdFrame to acess */
-    int pc;   /* Instruction pointer of a command in ExtCmdLoc.loc[.] */
-    int word; /* Index of word in ExtCmdLoc.loc[cmd]->{line,literal}[.] */
-    struct CFWordBC* prevPtr;
-} CFWordBC;
-
-/*
- * Structure to record the locations of invisible continuation lines in
- * literal scripts, as character offset from the beginning of the script. Both
- * compiler and direct evaluator use this information to adjust their line
- * counters when tracking through the script, because when it is invoked the
- * continuation line marker as a whole has been removed already, meaning that
- * the \n which was part of it is gone as well, breaking regular line
- * tracking.
- *
- * These structures are allocated and filled by both the function
- * EvalTokensStandard() in the file "tclBasic.c" and its caller EvalEx(), and
- * stored in the thread-global hashtable "lineCLPtr" in file "tclObj.c". They
- * are used by the functions TclSetByteCodeFromAny() and TclCompileScript(),
- * both found in the file "tclCompile.c". Their memory is released by the
- * function TclFreeObj(), in the file "tclObj.c", and also by the function
- * TclThreadFinalizeObjects(), in the same file.
- */
-
-#define CLL_END (-1)
-
-typedef struct ContLineLoc {
-  int num;      /* Number of entries in loc, not counting the final -1
-		 * marker entry */
-  int loc[1];   /* Table of locations, as character offsets. The table is
-		 * allocated as part of the structure, i.e. the loc array
-		 * extends behind the nominal end of the structure. An entry
-		 * containing the value CLL_END is put after the last
-		 * location, as end-marker/sentinel. */
-} ContLineLoc;
-
-#endif /* TCL_TIP280 */
+#endif
 
 /*
  *----------------------------------------------------------------
@@ -1532,45 +1488,13 @@ typedef struct Interp {
 				 * location information for its
 				 * body. It is keyed by the address of
 				 * the Proc structure for a procedure.
-				 * The values are "struct CmdFrame*".
 				 */
     Tcl_HashTable* lineBCPtr;
                                 /* This table remembers for each
 				 * ByteCode object the location
 				 * information for its body. It is
 				 * keyed by the address of the Proc
-				 * structure for a procedure. The
-				 * values are "struct ExtCmdLoc*" (See
-				 * tclCompile.h).
-				 */
-    Tcl_HashTable* lineLABCPtr;
-    Tcl_HashTable* lineLAPtr;
-                                /* This table remembers for each
-				 * argument of a command on the
-				 * execution stack the index of the
-				 * argument in the command, and the
-				 * location data of the command. It is
-				 * keyed by the address of the Tcl_Obj
-				 * containing the argument. The values
-				 * are "struct CFWord*" (See
-				 * tclBasic.c). This allows commands
-				 * like uplevel, eval, etc. to find
-				 * location information for their
-				 * arguments, if they are a proper
-				 * literal argument to an invoking
-				 * command. Alt view: An index to the
-				 * CmdFrame stack keyed by command
-				 * argument holders.
-				 */
-    ContLineLoc* scriptCLLocPtr;
-                                /* This table points to the location data for
-				 * invisible continuation lines in the script,
-				 * if any. This pointer is set by the function
-				 * TclEvalObjEx() in file "tclBasic.c", and
-				 * used by function ...() in the same file.
-				 * It does for the eval/direct path of script
-				 * execution what CompileEnv.clLoc does for
-				 * the bytecode compiler.
+				 * structure for a procedure.
 				 */
 #endif
 #ifdef TCL_TIP268
@@ -1889,16 +1813,6 @@ extern char		tclEmptyString;
 #ifdef TCL_TIP280
 EXTERN void             TclAdvanceLines _ANSI_ARGS_((int* line, CONST char* start,
 						     CONST char* end));
-EXTERN void             TclAdvanceContinuations _ANSI_ARGS_((int* line, int** next,
-						     int loc));
-EXTERN ContLineLoc*     TclContinuationsEnter _ANSI_ARGS_((Tcl_Obj* objPtr, int num,
-							   int* loc));
-EXTERN void             TclContinuationsEnterDerived _ANSI_ARGS_((Tcl_Obj* objPtr,
-								  int start, int* clNext));
-EXTERN ContLineLoc*     TclContinuationsGet _ANSI_ARGS_((Tcl_Obj* objPtr));
-
-EXTERN void         TclContinuationsCopy _ANSI_ARGS_((Tcl_Obj* objPtr, Tcl_Obj* originObjPtr));
-
 #endif
 EXTERN int		TclArraySet _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_Obj *arrayNameObj, Tcl_Obj *arrayElemObj));
@@ -1912,20 +1826,6 @@ EXTERN int              TclEvalObjEx _ANSI_ARGS_((Tcl_Interp *interp,
 						  int flags,
 						  CONST CmdFrame* invoker,
 						  int word));
-
-EXTERN void TclArgumentEnter   _ANSI_ARGS_((Tcl_Interp* interp,
-					    Tcl_Obj* objv[], int objc, CmdFrame* cf));
-EXTERN void TclArgumentRelease _ANSI_ARGS_((Tcl_Interp* interp,
-					    Tcl_Obj* objv[], int objc));
-EXTERN void TclArgumentBCEnter _ANSI_ARGS_((Tcl_Interp* interp,
-					    Tcl_Obj* objv[], int objc,
-					    void* codePtr, CmdFrame* cfPtr, int pc));
-EXTERN void TclArgumentBCRelease _ANSI_ARGS_((Tcl_Interp* interp,
-					      Tcl_Obj* objv[], int objc,
-					      void* codePtr, int pc));
-
-EXTERN void TclArgumentGet     _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj* obj,
-					    CmdFrame** cfPtrPtr, int* wordPtr));
 #endif
 
 EXTERN void		TclExpandTokenArray _ANSI_ARGS_((
@@ -1940,10 +1840,6 @@ EXTERN int		TclFileMakeDirsCmd _ANSI_ARGS_((Tcl_Interp *interp,
 			    int objc, Tcl_Obj *CONST objv[])) ;
 EXTERN int		TclFileRenameCmd _ANSI_ARGS_((Tcl_Interp *interp,
 			    int objc, Tcl_Obj *CONST objv[])) ;
-EXTERN void		TclCreateLateExitHandler (Tcl_ExitProc * proc,
-						   ClientData clientData);
-EXTERN void		TclDeleteLateExitHandler (Tcl_ExitProc * proc,
-						   ClientData clientData);
 EXTERN void		TclFinalizeAllocSubsystem _ANSI_ARGS_((void));
 EXTERN void		TclFinalizeAsync _ANSI_ARGS_((void));
 EXTERN void		TclFinalizeCompilation _ANSI_ARGS_((void));
@@ -2656,11 +2552,4 @@ extern Tcl_Mutex tclObjMutex;
 # define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TCLINT */
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- * End:
- */
+

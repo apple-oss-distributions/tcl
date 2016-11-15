@@ -182,8 +182,7 @@ Tcl_ProcObjCmd(dummy, interp, objc, objv)
 	    context.line &&
 	    (context.nline >= 4) &&
 	    (context.line [3] >= 0)) {
-	    int       isNew;
-	    Tcl_HashEntry* hePtr;
+	    int       new;
 	    CmdFrame* cfPtr = (CmdFrame*) ckalloc (sizeof (CmdFrame));
 
 	    cfPtr->level    = -1;
@@ -207,27 +206,9 @@ Tcl_ProcObjCmd(dummy, interp, objc, objv)
 	    cfPtr->cmd.str.cmd = NULL;
 	    cfPtr->cmd.str.len = 0;
 
-	    hePtr = Tcl_CreateHashEntry (iPtr->linePBodyPtr, (char*) procPtr,
-					 &isNew);
-	    if (!isNew) {
-		/*
-		 * Get the old command frame and release it.  See also
-		 * TclProcCleanupProc in this file. Currently it seems as if
-		 * only the procbodytest::proc command of the testsuite is
-		 * able to trigger this situation.
-		 */
-
-		CmdFrame* cfOldPtr = (CmdFrame *) Tcl_GetHashValue(hePtr);
-
-		if (cfOldPtr->type == TCL_LOCATION_SOURCE) {
-		    Tcl_DecrRefCount(cfOldPtr->data.eval.path);
-		    cfOldPtr->data.eval.path = NULL;
-		}
-		ckfree((char *) cfOldPtr->line);
-		cfOldPtr->line = NULL;
-		ckfree((char *) cfOldPtr);
-	    }
-	    Tcl_SetHashValue (hePtr, cfPtr);
+	    Tcl_SetHashValue (Tcl_CreateHashEntry (iPtr->linePBodyPtr,
+						   (char*) procPtr, &new),
+			      cfPtr);
 	}
     }
 #endif
@@ -366,20 +347,8 @@ TclCreateProc(interp, nsPtr, procName, argsPtr, bodyPtr, procPtrPtr)
          */
 
         if (Tcl_IsShared(bodyPtr)) {
-#ifdef TCL_TIP280
-	    Tcl_Obj* sharedBodyPtr = bodyPtr;
-#endif
             bytes = Tcl_GetStringFromObj(bodyPtr, &length);
             bodyPtr = Tcl_NewStringObj(bytes, length);
-#ifdef TCL_TIP280
-	    /*
-	     * TIP #280.
-	     * Ensure that the continuation line data for the original body is
-	     * not lost and applies to the new body as well.
-	     */
-
-	    TclContinuationsCopy (bodyPtr, sharedBodyPtr);
-#endif
         }
 
         /*
@@ -765,15 +734,7 @@ Tcl_UplevelObjCmd(dummy, interp, objc, objv)
      */
 
     if (objc == 1) {
-#ifdef TCL_TIP280
-	/* TIP #280. Make argument location available to eval'd script */
-	CmdFrame* invoker = NULL;
-	int word          = 0;
-	TclArgumentGet (interp, objv[0], &invoker, &word);
-	result = TclEvalObjEx(interp, objv[0], TCL_EVAL_DIRECT, invoker, word);
-#else
 	result = Tcl_EvalObjEx(interp, objv[0], TCL_EVAL_DIRECT);
-#endif
     } else {
 	/*
 	 * More than one argument: concatenate them together with spaces
@@ -1311,6 +1272,7 @@ ProcCompileProc(interp, procPtr, bodyPtr, nsPtr, description,
     Interp *iPtr = (Interp*)interp;
     int i, result;
     Tcl_CallFrame frame;
+    Proc *saveProcPtr;
     ByteCode *codePtr = (ByteCode *) bodyPtr->internalRep.otherValuePtr;
     CompiledLocal *localPtr;
  
@@ -1378,6 +1340,8 @@ ProcCompileProc(interp, procPtr, bodyPtr, nsPtr, description,
  	 *   proper namespace context, so that the byte codes are
  	 *   compiled in the appropriate class context.
  	 */
+
+ 	saveProcPtr = iPtr->compiledProcPtr;
 
 	if (procPtrPtr != NULL && procPtr->refCount > 1) {
 	    Tcl_Command token;
@@ -1463,6 +1427,8 @@ ProcCompileProc(interp, procPtr, bodyPtr, nsPtr, description,
 	    Tcl_PopCallFrame(interp);
 	}
  
+ 	iPtr->compiledProcPtr = saveProcPtr;
+ 	
  	if (result != TCL_OK) {
  	    if (result == TCL_ERROR) {
 		char buf[100 + TCL_INTEGER_SPACE];
