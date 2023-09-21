@@ -1477,8 +1477,8 @@ expDiagLogU(str)
      char *str;
 {
   if (exp_is_debugging) {
-    fprintf(stderr, "%s", str);
-    if (exp_logfile) fprintf(exp_logfile, "%s", str);
+    fprintf(stderr,str);
+    if (exp_logfile) fprintf(exp_logfile,str);
   }
 }
 
