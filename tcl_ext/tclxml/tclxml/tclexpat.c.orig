@@ -867,7 +867,7 @@ static void TclExpatAttlistDeclHandler(userdata, name, attributes)
 
   attdefnObj = Tcl_NewListObj(0, NULL);
   for (count = 0; (*attributes)[count] != NULL; count++) {
-    Tcl_ListObjAppendElement(expat->interp, attdefnObj, Tcl_NewStringObj((*attributes)[count], -1));
+    Tcl_ListObjAppendElement(expat->interp, attdefnObj, Tcl_NewStringObj(*attributes[count], -1));
   }
 
   TclXML_AttlistDeclHandler(
